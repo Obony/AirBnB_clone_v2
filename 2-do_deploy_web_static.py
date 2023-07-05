@@ -11,7 +11,7 @@ from os import path
 from datetime import datetime
 
 
-env.hosts = ['34.224.95.198', '52.87.220.62']
+env.hosts = ['100.26.49.104', '18.204.6.37']
 env.rsa = '~/.ssh/id_rsa'
 env.user = 'ubuntu'
 
