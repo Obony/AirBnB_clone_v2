@@ -1,38 +1,43 @@
 #!/usr/bin/env bash
-# Sets up a web server for deployment of web_static.
+# This program will install Nginx and Put a static file in it.
+# This bash script will automate the creation of files.
 
-apt-get update
-apt-get install -y nginx
+sudo apt update
+sudo apt-get install nginx -y
+sudo ufw allow "Nginx HTTP"
 
-mkdir -p /data/web_static/releases/test/
-mkdir -p /data/web_static/shared/
-echo "Holberton School" > /data/web_static/releases/test/index.html
-ln -sf /data/web_static/releases/test/ /data/web_static/current
+# Creating All Required Folders and File
+sudo mkdir -p /data/web_static/releases
+sudo mkdir -p /data/web_static/shared
+sudo mkdir -p /data/web_static/releases/test
+#sudo mkdir -p /data/web_static/current
+sudo touch /data/web_static/releases/test/index.html
 
-chown -R ubuntu /data/
-chgrp -R ubuntu /data/
+PATH_F=/data/web_static/releases/test/index.html
 
-printf %s "server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    add_header X-Served-By $HOSTNAME;
-    root   /var/www/html;
-    index  index.html index.htm;
+# Adding a Test Content to index file
+CONTENT="<html>
+<head>
+</head>
+<body>
+    Holberton School
+</body>
+</html>"
 
-    location /hbnb_static {
-	alias /data/web_static/current;
-	index index.html index.htm;
-    }
+echo "$CONTENT" | sudo tee "$PATH_F"
 
-    location /redirect_me {
-	return 301 http://cuberule.com/;
-    }
+# Creating A Symbolic Linking
+sudo ln -sfn /data/web_static/releases/test/ /data/web_static/current
 
-    error_page 404 /404.html;
-    location /404 {
-      root /var/www/html;
-      internal;
-    }
-}" > /etc/nginx/sites-available/default
+# Granting Ownership
+sudo chown -R ubuntu:ubuntu /data/
 
-service nginx restart
+# Creating hbtn dir
+#mkdir hbtn_static
+
+# Here is the section that configures Nginx Config file
+CONF_PATH=/etc/nginx/sites-enabled/default
+
+sudo sed -i "/listen 80 default_server;/a\\\tlocation /hbnb_static/ {\n\talias /data/web_static/current/;\n\t}" "$CONF_PATH"
+
+sudo service nginx restart
