@@ -1,22 +1,25 @@
 #!/usr/bin/python3
-# Fabfile to generates a .tgz archive from the contents of web_static.
-import os.path
-from datetime import datetime
+"""
+This is a python program that uses Fabric to Tranfer
+file to my server, by first compressing it.
+"""
+
 from fabric.api import local
+from time import strftime
+from datetime import time
 
 
 def do_pack():
-    """Create a tar gzipped archive of the directory web_static."""
-    dt = datetime.utcnow()
-    file = "versions/web_static_{}{}{}{}{}{}.tgz".format(dt.year,
-                                                         dt.month,
-                                                         dt.day,
-                                                         dt.hour,
-                                                         dt.minute,
-                                                         dt.second)
-    if os.path.isdir("versions") is False:
-        if local("mkdir -p versions").failed is True:
-            return None
-    if local("tar -cvzf {} web_static".format(file)).failed is True:
+    """
+    do_pack funtion or method will create a folder called
+    version and create web_static achive in it with date
+    """
+    filedate = strftime("%Y%m%d%H%M%S")
+    try:
+        local("mkdir -p versions")
+        local("tar -czvf versions/web_static_{}.tgz web_static".format(
+            filedate))
+        return "versions/web_static_{}.tgz".format(filedate)
+
+    except Exception as e:
         return None
-    return file
