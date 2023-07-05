@@ -1,56 +1,62 @@
 #!/usr/bin/python3
-"""Compress web static package
 """
-from fabric.api import *
-from datetime import datetime
-from os import path
+This script distributes archive of web_static to web servers
+"""
 
+from fabric.api import env
 
 env.hosts = ['100.26.49.104', '18.204.6.37']
-env.user = 'ubuntu'
-env.key_filename = '~/.ssh/id_rsa'
 
 
 def do_deploy(archive_path):
-        """Deploy web files to server
-        """
-        try:
-                if not (path.exists(archive_path)):
-                        return False
+    """
+    Upload archive to env.hosts & uncompress it
+    """
+    from fabric.api import run, put
+    import re
 
-                # upload archive
-                put(archive_path, '/tmp/')
+    if not archive_path:
+        return False
 
-                # create target dir
-                timestamp = archive_path[-18:-4]
-                run('sudo mkdir -p /data/web_static/\
-releases/web_static_{}/'.format(timestamp))
+    # get folder name where to uncompress archive
+    match = re.compile(r'.*/(\w+).tgz$').search(archive_path)
+    if not match:
+        return False
+    folder = match.group(1)
 
-                # uncompress archive and delete .tgz
-                run('sudo tar -xzf /tmp/web_static_{}.tgz -C \
-/data/web_static/releases/web_static_{}/'
-                    .format(timestamp, timestamp))
+    # upload archive to server
+    ret = put(archive_path, '/tmp/')
+    if not ret.succeeded:
+        return False
 
-                # remove archive
-                run('sudo rm /tmp/web_static_{}.tgz'.format(timestamp))
+    # uncompress archive
+    ret = run("mkdir -p /data/web_static/releases/{}".format(folder))
+    if not ret.succeeded:
+        return False
+    ret = run("tar -xzf /tmp/{}.tgz -C \
+               /data/web_static/releases/{}".format(folder, folder))
+    if not ret.succeeded:
+        return False
 
-                # move contents into host web_static
-                run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
-/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
+    # delete archive from server & move files
+    ret = run("rm /tmp/{}.tgz".format(folder))
+    if not ret.succeeded:
+        return False
+    ret = run("mv /data/web_static/releases/{}/web_static/* \
+               /data/web_static/releases/{}/".format(folder, folder))
+    if not ret.succeeded:
+        return False
+    ret = run("rm -rf /data/web_static/releases/{}/web_static/".format(folder))
+    if not ret.succeeded:
+        return False
 
-                # remove extraneous web_static dir
-                run('sudo rm -rf /data/web_static/releases/\
-web_static_{}/web_static'
-                    .format(timestamp))
+    # delete symlink and create new one
+    ret = run("rm -rf /data/web_static/current")
+    if not ret.succeeded:
+        return False
+    ret = run("ln -fs /data/web_static/releases/{}/ \
+               /data/web_static/current".format(folder))
+    if not ret.succeeded:
+        return False
 
-                # delete pre-existing sym link
-                run('sudo rm -rf /data/web_static/current')
-
-                # re-establish symbolic link
-                run('sudo ln -s /data/web_static/releases/\
-web_static_{}/ /data/web_static/current'.format(timestamp))
-        except:
-                return False
-
-        # return True on success
-        return True
+    return True
