@@ -1,62 +1,64 @@
 #!/usr/bin/python3
 """
-This script distributes archive of web_static to web servers
+This python program creates archive on local machine,
+deploy it to the target servers and unzip it with some
+other cool stuffs
 """
 
-from fabric.api import env
+
+from fabric.api import *
+from os import path
+from datetime import datetime
+
 
 env.hosts = ['100.26.49.104', '18.204.6.37']
+env.rsa = '~/.ssh/id_rsa'
+env.user = 'ubuntu'
 
 
 def do_deploy(archive_path):
+    """Depoying web static
+        :param archive_path: path to archive file
+
     """
-    Upload archive to env.hosts & uncompress it
-    """
-    from fabric.api import run, put
-    import re
+    try:
+        if not (path.exists(archive_path)):
+            return False
 
-    if not archive_path:
-        return False
+        # uploading archive
+        put(archive_path, '/tmp/')
 
-    # get folder name where to uncompress archive
-    match = re.compile(r'.*/(\w+).tgz$').search(archive_path)
-    if not match:
-        return False
-    folder = match.group(1)
+        # Creating destination dir
+        time = archive_path[-18:-4]
+        run('sudo mkdir -p /data/web_static/releases/web_static_{}.tgz/'
+            .format(time))
 
-    # upload archive to server
-    ret = put(archive_path, '/tmp/')
-    if not ret.succeeded:
-        return False
+        # Uncompressing archive folder
+        run('tar -xzf /tmp/web_static_{}.tgz -C /data/web_static/\
+            releases/web_static_{}/'.format(time, time))
 
-    # uncompress archive
-    ret = run("mkdir -p /data/web_static/releases/{}".format(folder))
-    if not ret.succeeded:
-        return False
-    ret = run("tar -xzf /tmp/{}.tgz -C \
-               /data/web_static/releases/{}".format(folder, folder))
-    if not ret.succeeded:
-        return False
+        # Delete the archive from the web server
+        run('sudo rm /tmp/web_static_{}.tgz'.format(time))
 
-    # delete archive from server & move files
-    ret = run("rm /tmp/{}.tgz".format(folder))
-    if not ret.succeeded:
-        return False
-    ret = run("mv /data/web_static/releases/{}/web_static/* \
-               /data/web_static/releases/{}/".format(folder, folder))
-    if not ret.succeeded:
-        return False
-    ret = run("rm -rf /data/web_static/releases/{}/web_static/".format(folder))
-    if not ret.succeeded:
-        return False
+        # Move files
+        run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
+            /data/web_static/releases/web_static_{}/'.format(time, time))
 
-    # delete symlink and create new one
-    ret = run("rm -rf /data/web_static/current")
-    if not ret.succeeded:
-        return False
-    ret = run("ln -fs /data/web_static/releases/{}/ \
-               /data/web_static/current".format(folder))
-    if not ret.succeeded:
+        # Remove an empty dir
+        run('sudo rm -rf /data/web_static/releases/web_static_{}/\
+            web_static'.format(time))
+
+        # Delete the symbolic link /data/web_static/current from the web server
+        run('sudo rm -rf /data/web_static/current')
+
+        # Create a new the symbolic link /data/web_static/current on
+        # the web server
+        run('sudo ln -sfn /data/web_static/releases/web_static_{}.tgz/ \
+            /data/web_static/current'.format(time))
+
+    except Exception as e:
+        # If failed
         return False
 
+        # On Success
     return True
