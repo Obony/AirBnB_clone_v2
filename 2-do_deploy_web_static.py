@@ -61,8 +61,5 @@ def do_deploy(archive_path):
         return False
 
         # On Success
-<<<<<<< HEAD
-    return True
-=======
-    return True
->>>>>>> 2321bf27c24f5a34e5674453a6b769fc5d8a8915
+        return True
+
