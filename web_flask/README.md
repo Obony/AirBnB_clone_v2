@@ -4,6 +4,8 @@
 - [x] Webserver
 - [x] Flask
 
+![Flask,Jinja](https://github.com/Obony/AirBnB_clone_v2/assets/117737538/7d99f9b3-4884-4e68-9878-b09a36a14bdf)
+
 ## Resources Used
 * What is a Web Framework?
 * A Minimal Application
