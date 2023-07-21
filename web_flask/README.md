@@ -18,6 +18,8 @@
 * List of Control Structures (read up to “Call”)
 * Flask
 * Jinja
+  
+```$ pip3 install Flask```
 
 ## Learning Objectives
 * What is a Web Framework
