@@ -6,10 +6,10 @@
     <title>HBNB</title>
 </head>
 <body>
-    {%- if n is divisibleby 2 %}
-    <H1>Number: {{ n }} is even</H1>
-    {%- else %}
-    <H1>Number: {{ n }} is odd</H1>
+    {% if n is even %}
+        <H1>Number: {{ n }} is even</H1>
+    {% else %}
+        <H1>Number: {{ n }} is odd</H1>
     {% endif %}
 </body>
 </html>
