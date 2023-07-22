@@ -16,7 +16,7 @@ def hello_hbnb():
 
 
 @app.route('/hbnb', strict_slashes=False)
-def hbnb():
+def display_hbnb():
     """
     /hbnb web page
     """
@@ -24,7 +24,7 @@ def hbnb():
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def display_text(text):
+def display_c_text(text):
     # Replace underscores with spaces in the text variable
     formatted_text = escape(text).replace('_', ' ')
     return f"C {formatted_text}"
